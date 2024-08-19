@@ -1,29 +1,26 @@
-'use client';
+import { VercelInviteUserEmail } from '../emails/vercel-invite-user';
+import { Resend } from 'resend';
 
 export default function Page() {
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const email = e.target.email.value;
+  async function send(formData: FormData) {
+    'use server';
 
-    try {
-      const response = await fetch('/api/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const email = formData.get('email') as string;
 
-      if (!response.ok) {
-        alert('Failed to send email. Try again later.');
-        return;
-      }
+    const { data, error } = await resend.emails.send({
+      from: 'Vercel <vercel@resend.dev>',
+      to: [email],
+      subject: 'Join team on Vercel',
+      react: VercelInviteUserEmail({}),
+    });
 
-      const json = await response.json();
-      alert(`Email sent: ${json.data.id}`);
+    if (error) {
+      console.log(error);
     }
-    catch(error) {
-      console.error(error);
-    }
-  };
+
+    console.log(data);
+  }
 
   return (
     <div className="bg-zinc-950 py-16 sm:py-24 h-[100vh]">
@@ -35,12 +32,12 @@ export default function Page() {
           <p className="mx-auto mt-2 max-w-xl text-center text-lg leading-8 text-gray-300">
             Type your email address to get invited to a team.
           </p>
-          <form className="mx-auto mt-10 flex max-w-md gap-x-4" onSubmit={onSubmit}>
-            <label htmlFor="email-address" className="sr-only">
+          <form className="mx-auto mt-10 flex max-w-md gap-x-4" action={send}>
+            <label htmlFor="email" className="sr-only">
               Email address
             </label>
             <input
-              id="email-address"
+              id="email"
               name="email"
               type="email"
               required
