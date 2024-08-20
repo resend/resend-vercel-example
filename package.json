@@ -12,7 +12,8 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-email": "2.1.6",
-    "resend": "4.0.0"
+    "resend": "4.0.0",
+    "sonner": "^1.5.0"
   },
   "devDependencies": {
     "@types/node": "22.4.1",

@@ -3,10 +3,23 @@
 import clsx from "clsx";
 import { useFormState, useFormStatus } from "react-dom";
 import { send } from "./lib/actions";
-import React from "react";
+import * as React from "react";
+import { toast } from "sonner";
 
 export default function Page() {
-  const [, dispatch] = useFormState(send, undefined);
+  const [state, dispatch] = useFormState(send, undefined);
+
+  React.useEffect(() => {
+    if (!state) {
+      return;
+    }
+
+    if ("data" in state) {
+      toast(state.data);
+    } else if ("error" in state) {
+      toast(`Error when sending email: ${state.error}`);
+    }
+  }, [state]);
 
   return (
     <div className="bg-zinc-950 p-8 min-h-screen flex justify-center items-center sm:items-start sm:p-24">

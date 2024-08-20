@@ -5,7 +5,9 @@ import { VercelInviteUserEmail } from "../../emails/vercel-invite-user";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function send(prevState: string | undefined, formData: FormData) {
+type State = { error: string } | { data: string };
+
+export async function send(prevState: State, formData: FormData) {
   const email = formData.get("email") as string;
 
   const { data, error } = await resend.emails.send({
@@ -16,10 +18,10 @@ export async function send(prevState: string | undefined, formData: FormData) {
   });
 
   if (error) {
-    return error.message;
+    return { error: error.message };
   }
 
   console.log(data);
 
-  return "Email sent!";
+  return { data: "Email sent!" };
 }
