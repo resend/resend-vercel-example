@@ -14,7 +14,7 @@ export async function send(prevState: State, formData: FormData) {
     from: "Vercel <vercel@resend.dev>",
     to: [email],
     subject: "Join team on Vercel",
-    react: VercelInviteUserEmail({}),
+    react: <VercelInviteUserEmail/>,
   });
 
   if (error) {
