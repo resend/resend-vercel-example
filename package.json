@@ -11,7 +11,7 @@
     "next": "14.2.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-email": "2.1.6",
+    "react-email": "3.0.7",
     "resend": "4.0.0",
     "sonner": "^1.5.0"
   },
