@@ -3,7 +3,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "email": "email dev"
+    "build": "next build",
+    "start": "next start",
+    "email": "email dev",
+    "lint:fix": "biome check . --write",
+    "lint": "biome check ."
   },
   "dependencies": {
     "@react-email/components": "0.1.1",
@@ -16,6 +20,7 @@
     "sonner": "2.0.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.0.6",
     "@tailwindcss/postcss": "4.1.11",
     "@types/node": "24.0.8",
     "@types/react": "19.1.8",
