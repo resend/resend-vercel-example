@@ -1,14 +1,13 @@
 "use client";
 
 import clsx from "clsx";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { send } from "./lib/actions";
 import * as React from "react";
 import { toast } from "sonner";
 
 export default function Page() {
-  const [state, dispatch] = useFormState(send, undefined);
-
+  const [state, dispatch] = React.useActionState(send, undefined);
   React.useEffect(() => {
     if (!state) {
       return;
@@ -96,7 +95,7 @@ function SubmitButton() {
       type="submit"
       className={clsx(
         "flex-none rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
-        pending && "opacity-50 cursor-not-allowed"
+        pending && "opacity-50 cursor-not-allowed",
       )}
     >
       Invite
