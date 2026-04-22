@@ -1,0 +1,27 @@
+emails/vercel-invite-user.tsx
+  0be4475958d44179 17
+tsconfig.json
+  0be4475958d44179 18
+package.json
+  0be4475958d44179 13,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "67964b08e8620f87553d50b02837582c7b381db2",
+  "prompts": {
+    "0be4475958d44179": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e45906fa-a2d6-463a-8f05-62707e252535",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "João Melo",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 6,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
