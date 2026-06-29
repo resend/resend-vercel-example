@@ -13,9 +13,9 @@
   "dependencies": {
     "@react-email/ui": "6.0.0",
     "clsx": "2.1.1",
-    "next": "15.4.7",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
+    "next": "16.2.9",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-email": "6.0.0",
     "resend": "4.6.0",
     "sonner": "2.0.6"
@@ -24,8 +24,8 @@
     "@biomejs/biome": "2.0.6",
     "@tailwindcss/postcss": "4.1.11",
     "@types/node": "24.0.8",
-    "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
     "autoprefixer": "10.4.21",
     "postcss": "8.5.6",
     "tailwindcss": "4.1.11",
