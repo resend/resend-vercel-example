@@ -27,8 +27,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       resend:
-        specifier: 4.6.0
-        version: 4.6.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 4.8.0
+        version: 4.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       sonner:
         specifier: 2.0.6
         version: 2.0.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -1282,8 +1282,8 @@ packages:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
 
-  resend@4.6.0:
-    resolution: {integrity: sha512-D5T2I82FvEUYFlrHzaDvVtr5ADHdhuoLaXgLFGABKyNtQgPWIuz0Vp2L2Evx779qjK37aF4kcw1yXJDHhA2JnQ==}
+  resend@4.8.0:
+    resolution: {integrity: sha512-R8eBOFQDO6dzRTDmaMEdpqrkmgSjPpVXt4nGfWsZdYOet0kqra0xgbvTES6HmCriZEXbmGk3e0DiGIaLFTFSHA==}
     engines: {node: '>=18'}
 
   restore-cursor@5.1.0:
@@ -2443,7 +2443,7 @@ snapshots:
 
   require-from-string@2.0.2: {}
 
-  resend@4.6.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  resend@4.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
       '@react-email/render': 1.1.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     transitivePeerDependencies:
