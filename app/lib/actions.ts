@@ -1,204 +1,216 @@
 "use server";
 
-import { Resend } from "resend";
-import { VercelInviteUserEmail } from "../../emails/vercel-invite-user";
 import clientPromise from "./mongodb";
 import { revalidatePath } from "next/cache";
 
-const resendApiKey = process.env.RESEND_API_KEY || "re_mockkey_12345678";
-const resend = new Resend(resendApiKey);
-
-export interface Invitation {
+export interface WebhookDefinition {
   _id?: string;
-  email: string;
-  invitedByUsername: string;
-  invitedByEmail: string;
-  teamName: string;
-  role: string;
-  status: "Sent" | "Failed";
-  errorMessage?: string;
+  slug: string;
+  name: string;
+  method: string;
+  status: number;
+  contentType: string;
+  body: string;
+  notifyEmail?: string;
   createdAt: string;
 }
 
-export type State = { error: string } | { data: string };
-
-export async function sendInvitation(prevState: State, formData: FormData): Promise<State> {
-  const emailInput = formData.get("email") as string;
-  const invitedByUsername = (formData.get("invitedByUsername") as string) || "Alan Turing";
-  const invitedByEmail = (formData.get("invitedByEmail") as string) || "alan.turing@example.com";
-  const teamName = (formData.get("teamName") as string) || "Enigma";
-  const role = (formData.get("role") as string) || "Member";
-
-  if (!emailInput) {
-    return { error: "Email address is required." };
-  }
-
-  // Support comma-separated emails for bulk processing (Step 3 & 4)
-  const emails = emailInput
-    .split(",")
-    .map((e) => e.trim())
-    .filter((e) => e.length > 0);
-
-  if (emails.length === 0) {
-    return { error: "No valid email addresses provided." };
-  }
-
-  const results: { email: string; success: boolean; error?: string }[] = [];
-
-  for (const email of emails) {
-    try {
-      // If RESEND_API_KEY is not defined, mock successful delivery or fail cleanly
-      let sendError: any = null;
-      let sendData: any = null;
-
-      if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_mockkey_12345678") {
-        console.log(`[MOCK EMAIL] Sending invite to ${email} for team ${teamName}`);
-        sendData = { id: `mock-id-${Date.now()}-${Math.random()}` };
-      } else {
-        const { data, error } = await resend.emails.send({
-          from: "Vercel <vercel@resend.dev>",
-          to: [email],
-          subject: `Join ${teamName} on Vercel`,
-          react: VercelInviteUserEmail({
-            username: email.split("@")[0],
-            invitedByUsername,
-            invitedByEmail,
-            teamName,
-            inviteLink: `https://vercel.com/teams/invite/${encodeURIComponent(teamName.toLowerCase())}`,
-          }),
-        });
-        sendError = error;
-        sendData = data;
-      }
-
-      const client = await clientPromise;
-      const db = client.db("resend-vercel-example");
-
-      if (sendError) {
-        await db.collection("invitations").insertOne({
-          email,
-          invitedByUsername,
-          invitedByEmail,
-          teamName,
-          role,
-          status: "Failed",
-          errorMessage: sendError.message,
-          createdAt: new Date().toISOString(),
-        });
-        results.push({ email, success: false, error: sendError.message });
-      } else {
-        await db.collection("invitations").insertOne({
-          email,
-          invitedByUsername,
-          invitedByEmail,
-          teamName,
-          role,
-          status: "Sent",
-          createdAt: new Date().toISOString(),
-        });
-        results.push({ email, success: true });
-      }
-    } catch (e: any) {
-      console.error("Failed to process invitation for", email, e);
-      try {
-        const client = await clientPromise;
-        const db = client.db("resend-vercel-example");
-        await db.collection("invitations").insertOne({
-          email,
-          invitedByUsername,
-          invitedByEmail,
-          teamName,
-          role,
-          status: "Failed",
-          errorMessage: e.message || "Unknown error",
-          createdAt: new Date().toISOString(),
-        });
-      } catch (dbErr) {
-        console.error("Could not write failure log to MongoDB", dbErr);
-      }
-      results.push({ email, success: false, error: e.message });
-    }
-  }
-
-  revalidatePath("/");
-
-  const failedCount = results.filter((r) => !r.success).length;
-  if (failedCount === emails.length) {
-    return { error: `All ${emails.length} invitation(s) failed: ${results[0].error}` };
-  } else if (failedCount > 0) {
-    return { data: `Successfully sent ${emails.length - failedCount} invitation(s). ${failedCount} failed.` };
-  }
-
-  return { data: `Successfully invited ${emails.length} recipient(s) to ${teamName}!` };
+export interface WebhookRequestLog {
+  _id?: string;
+  webhookSlug: string;
+  method: string;
+  headers: Record<string, string>;
+  query: Record<string, string>;
+  body: string;
+  clientIp: string;
+  timestamp: string;
+  emailNotified?: boolean;
+  emailError?: string;
 }
 
-export async function getInvitations(): Promise<Invitation[]> {
+export type WebhookState = { error: string } | { data: WebhookDefinition };
+
+/**
+ * Creates a dynamic webhook endpoint configuration
+ */
+export async function createWebhook(prevState: any, formData: FormData): Promise<WebhookState> {
+  const name = (formData.get("name") as string) || "My Webhook";
+  let slug = (formData.get("slug") as string) || "";
+  const method = (formData.get("method") as string) || "POST";
+  const statusStr = (formData.get("status") as string) || "200";
+  const contentType = (formData.get("contentType") as string) || "application/json";
+  const body = (formData.get("body") as string) || "{\"status\": \"success\"}";
+  const notifyEmail = (formData.get("notifyEmail") as string) || "";
+
+  // Normalize slug: lowercase and hyphenated or auto-generate if empty
+  if (!slug) {
+    slug = Math.random().toString(36).substring(2, 8);
+  } else {
+    slug = slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-");
+  }
+
+  const status = Number.parseInt(statusStr, 10) || 200;
+
   try {
     const client = await clientPromise;
-    const db = client.db("resend-vercel-example");
+    const db = client.db("dynamic-webhook-app");
+
+    // Check if slug is already taken
+    const existing = await db.collection("webhooks").findOne({ slug });
+    if (existing) {
+      return { error: `The endpoint path '/api/webhooks/${slug}' is already taken. Please choose a different one.` };
+    }
+
+    const newWebhook: any = {
+      name,
+      slug,
+      method,
+      status,
+      contentType,
+      body,
+      notifyEmail: notifyEmail.trim() || undefined,
+      createdAt: new Date().toISOString(),
+    };
+
+    await db.collection("webhooks").insertOne(newWebhook);
+
+    revalidatePath("/");
+    return { data: newWebhook as WebhookDefinition };
+  } catch (e: any) {
+    console.error("Error creating webhook configuration", e);
+    return { error: e.message || "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Retrieves all registered dynamic webhooks
+ */
+export async function getWebhooks(): Promise<WebhookDefinition[]> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("dynamic-webhook-app");
     const docs = await db
-      .collection("invitations")
+      .collection("webhooks")
       .find({})
       .sort({ createdAt: -1 })
       .toArray();
 
     return docs.map((doc) => ({
       _id: doc._id.toString(),
-      email: doc.email,
-      invitedByUsername: doc.invitedByUsername,
-      invitedByEmail: doc.invitedByEmail,
-      teamName: doc.teamName,
-      role: doc.role,
+      name: doc.name,
+      slug: doc.slug,
+      method: doc.method,
       status: doc.status,
-      errorMessage: doc.errorMessage,
+      contentType: doc.contentType,
+      body: doc.body,
+      notifyEmail: doc.notifyEmail,
       createdAt: doc.createdAt,
-    })) as Invitation[];
+    })) as WebhookDefinition[];
   } catch (e) {
-    console.error("Error fetching invitations from MongoDB", e);
+    console.error("Error fetching webhooks from MongoDB", e);
     return [];
   }
 }
 
-export async function getAnalytics() {
+/**
+ * Retrieves incoming request logs for a specific webhook slug
+ */
+export async function getWebhookLogs(slug: string): Promise<WebhookRequestLog[]> {
+  if (!slug) return [];
   try {
     const client = await clientPromise;
-    const db = client.db("resend-vercel-example");
-    const invitations = await db.collection("invitations").find({}).toArray();
+    const db = client.db("dynamic-webhook-app");
+    const docs = await db
+      .collection("logs")
+      .find({ webhookSlug: slug })
+      .sort({ timestamp: -1 })
+      .limit(100)
+      .toArray();
 
-    const total = invitations.length;
-    const sent = invitations.filter((i) => i.status === "Sent").length;
-    const failed = invitations.filter((i) => i.status === "Failed").length;
+    return docs.map((doc) => ({
+      _id: doc._id.toString(),
+      webhookSlug: doc.webhookSlug,
+      method: doc.method,
+      headers: doc.headers || {},
+      query: doc.query || {},
+      body: doc.body || "",
+      clientIp: doc.clientIp || "",
+      timestamp: doc.timestamp,
+      emailNotified: doc.emailNotified,
+      emailError: doc.emailError,
+    })) as WebhookRequestLog[];
+  } catch (e) {
+    console.error("Error fetching request logs", e);
+    return [];
+  }
+}
 
-    const uniqueTeams = new Set(invitations.map((i) => i.teamName)).size;
-    const uniqueInvitees = new Set(invitations.map((i) => i.email)).size;
+/**
+ * Deletes a dynamic webhook and all of its associated logs
+ */
+export async function deleteWebhook(slug: string) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("dynamic-webhook-app");
+
+    await Promise.all([
+      db.collection("webhooks").deleteOne({ slug }),
+      db.collection("logs").deleteMany({ webhookSlug: slug }),
+    ]);
+
+    revalidatePath("/");
+    return { data: "Webhook and its logs deleted successfully." };
+  } catch (e: any) {
+    return { error: e.message || "Failed to delete webhook." };
+  }
+}
+
+/**
+ * Clears request logs for a specific webhook slug
+ */
+export async function clearWebhookLogs(slug: string) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("dynamic-webhook-app");
+    await db.collection("logs").deleteMany({ webhookSlug: slug });
+    revalidatePath("/");
+    return { data: "Logs cleared successfully." };
+  } catch (e: any) {
+    return { error: e.message || "Failed to clear logs." };
+  }
+}
+
+/**
+ * Fetches dynamic dashboard analytics
+ */
+export async function getDashboardAnalytics() {
+  try {
+    const client = await clientPromise;
+    const db = client.db("dynamic-webhook-app");
+
+    const totalEndpoints = await db.collection("webhooks").countDocuments();
+    const totalLogs = await db.collection("logs").countDocuments();
+
+    // Calculate error (4xx, 5xx) counts from the logs
+    // (In our log schema, we can store responseStatus returned during execution)
+    const logs = await db.collection("logs").find({}).project({ status: 1 }).toArray();
+    const statusCodes = logs.map((l) => l.status).filter(Boolean);
+    const errors = statusCodes.filter((c) => c >= 400).length;
+    const successes = statusCodes.filter((c) => c >= 200 && c < 300).length;
 
     return {
-      total,
-      sent,
-      failed,
-      uniqueTeams,
-      uniqueInvitees,
+      totalEndpoints,
+      totalLogs,
+      errors,
+      successes,
     };
   } catch (e) {
     console.error("Error running aggregations on MongoDB", e);
     return {
-      total: 0,
-      sent: 0,
-      failed: 0,
-      uniqueTeams: 0,
-      uniqueInvitees: 0,
+      totalEndpoints: 0,
+      totalLogs: 0,
+      errors: 0,
+      successes: 0,
     };
-  }
-}
-
-export async function clearInvitationHistory() {
-  try {
-    const client = await clientPromise;
-    const db = client.db("resend-vercel-example");
-    await db.collection("invitations").deleteMany({});
-    revalidatePath("/");
-    return { data: "History cleared successfully!" };
-  } catch (e: any) {
-    return { error: e.message || "Failed to clear history." };
   }
 }
