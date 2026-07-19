@@ -1,0 +1,21 @@
+$ next dev
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+- Environments: .env
+✓ Ready in 566ms
+
+○ Compiling / ...
+ GET / 200 in 6.4s (next.js: 5.9s, application-code: 549ms)
+ POST / 200 in 894ms (next.js: 18ms, application-code: 876ms)
+  └─ ƒ getInvitations() in 39ms lib/actions.ts
+ POST / 200 in 20ms (next.js: 4ms, application-code: 16ms)
+  └─ ƒ getAnalytics() in 3ms lib/actions.ts
+[MOCK EMAIL] Sending invite to delivered@resend.dev for team Hyperion
+[MOCK EMAIL] Sending invite to pilot@resend.dev for team Hyperion
+ POST / 200 in 87ms (next.js: 3ms, application-code: 84ms)
+  └─ ƒ sendInvitation(undefined, {}) in 24ms lib/actions.ts
+ POST / 200 in 30ms (next.js: 5ms, application-code: 26ms)
+  └─ ƒ getInvitations() in 4ms lib/actions.ts
+ POST / 200 in 20ms (next.js: 4ms, application-code: 16ms)
+  └─ ƒ getAnalytics() in 3ms lib/actions.ts
