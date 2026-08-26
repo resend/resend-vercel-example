@@ -13,7 +13,7 @@
   "dependencies": {
     "@react-email/ui": "6.0.0",
     "clsx": "2.1.1",
-    "next": "16.2.9",
+    "next": "16.2.11",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-email": "6.0.0",
